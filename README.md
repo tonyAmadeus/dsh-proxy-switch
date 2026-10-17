@@ -1,5 +1,13 @@
 # dsh-proxy-switch
 
+<p align="center">
+  <a href="https://github.com/tonyAmadeus/dsh-proxy-switch/releases"><img alt="version" src="https://img.shields.io/github/v/tag/tonyAmadeus/dsh-proxy-switch?label=version&color=38bdf8"></a>
+  <a href="https://github.com/tonyAmadeus/dsh-proxy-switch/stargazers"><img alt="stars" src="https://img.shields.io/github/stars/tonyAmadeus/dsh-proxy-switch?color=22d3ee"></a>
+  <a href="https://github.com/tonyAmadeus/dsh-proxy-switch/blob/main/LICENSE"><img alt="license" src="https://img.shields.io/github/license/tonyAmadeus/dsh-proxy-switch?color=22d3ee"></a>
+  <img alt="DSH" src="https://img.shields.io/badge/DSH-0.2.x-4B9CD3">
+  <img alt="dsh-plugin" src="https://img.shields.io/badge/dsh--plugin-%E2%9C%93-2ea44f">
+</p>
+
 DeepSeek Harness（DSH）的出站代理开关。**Clash 开着就走 Clash，关掉就自动直连，界面上一键切换，不用重启 DSH。**
 
 Outbound proxy switch for DeepSeek Harness: a local router picks Clash or direct per mode, with an in-UI switch. No DSH restart.
