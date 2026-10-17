@@ -3,6 +3,7 @@
 <p align="center">
   <a href="https://github.com/tonyAmadeus/dsh-proxy-switch/releases"><img alt="version" src="https://img.shields.io/github/v/tag/tonyAmadeus/dsh-proxy-switch?label=version&color=38bdf8"></a>
   <a href="https://github.com/tonyAmadeus/dsh-proxy-switch/stargazers"><img alt="stars" src="https://img.shields.io/github/stars/tonyAmadeus/dsh-proxy-switch?color=22d3ee"></a>
+  <a href="https://www.npmjs.com/package/dsh-proxy-switch"><img alt="npm" src="https://img.shields.io/npm/v/dsh-proxy-switch?color=cb3837"></a>
   <a href="https://github.com/tonyAmadeus/dsh-proxy-switch/blob/main/LICENSE"><img alt="license" src="https://img.shields.io/github/license/tonyAmadeus/dsh-proxy-switch?color=22d3ee"></a>
   <img alt="DSH" src="https://img.shields.io/badge/DSH-0.2.x-4B9CD3">
   <img alt="dsh-plugin" src="https://img.shields.io/badge/dsh--plugin-%E2%9C%93-2ea44f">
@@ -43,17 +44,19 @@ DSH 的代理策略是**启动器在插件加载之前**从 `.env` 一次性安�
 
 ### 1. 安装插件
 
-用 commit 锁定（推荐，最稳）：
+从 npm 安装（推荐，最简单）：
 
 ```powershell
-# 推荐：锁定 v0.1.0 tag
+dsh plugin add dsh-proxy-switch@0.1.0
+```
+
+也可以直接锁定 git tag（不依赖 npm）：
+
+```powershell
 dsh plugin add "git+https://github.com/tonyAmadeus/dsh-proxy-switch.git#v0.1.0"
 ```
 
-想要更严格，可以改成锁定具体 commit（把 `#` 后面换成仓库首页显示的 commit hash）。
-tag 相对方便，commit 则完全不可变。
-
-> npm 包尚未发布；发布后会支持 `dsh plugin add dsh-proxy-switch@<version>`。
+想要更严格，可以把 `#` 后面换成仓库首页显示的 commit hash，commit 完全不可变。
 
 ### 2. 让 DSH 走这个路由器
 
