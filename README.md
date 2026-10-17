@@ -46,10 +46,10 @@ DSH 的代理策略是**启动器在插件加载之前**从 `.env` 一次性安�
 用 commit 锁定（推荐，最稳）：
 
 ```powershell
-dsh plugin add "git+https://github.com/tonyAmadeus/dsh-proxy-switch.git#458df324272cd4d9b6f4b1e7e7816bc3de1df400"
+dsh plugin add "git+https://github.com/tonyAmadeus/dsh-proxy-switch.git#36c96875200c67d9ff243f9cea831e4ccad79d31"
 ```
 
-或用 tag（tag 可以被移动，不如 commit 稳）：
+或用 tag（tag 可以被移动，不如 commit 稳；当前 `v0.1.0` 指向同一代码）：
 
 ```powershell
 dsh plugin add "git+https://github.com/tonyAmadeus/dsh-proxy-switch.git#v0.1.0"
