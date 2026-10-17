@@ -1,0 +1,7 @@
+node_modules/
+*.log
+.env
+*.bak
+*.bak-*
+.DS_Store
+Thumbs.db

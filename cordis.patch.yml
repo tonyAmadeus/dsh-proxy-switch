@@ -1,0 +1,15 @@
+# dsh-proxy-switch bundle patch
+#
+# Inserts the plugin row into the profile. The row name is this package's own
+# name, so the loader resolves it from the profile's node_modules once the
+# bundle is installed (dsh plugin add).
+#
+# All paths are resolved at runtime from DSH_HOME / the user's home directory;
+# nothing here is machine specific.
+
+- insert:
+    - id: dsh-proxy-switch
+      name: 'dsh-proxy-switch'
+      config:
+        routerPort: 17897
+        clashPort: 7897

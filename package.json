@@ -1,0 +1,60 @@
+{
+  "name": "dsh-proxy-switch",
+  "version": "0.1.0",
+  "description": "DSH 出站代理开关：本地路由器按模式在 Clash 与直连之间自动选路，界面一键切换，无需重启。Outbound proxy switch for DeepSeek Harness: local router picks Clash or direct per mode, with an in-UI switch.",
+  "icon": "./icon.svg",
+  "license": "MIT",
+  "type": "module",
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "proxy",
+    "clash",
+    "mihomo",
+    "cordis"
+  ],
+  "homepage": "https://github.com/tonyAmadeus/dsh-proxy-switch#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tonyAmadeus/dsh-proxy-switch.git"
+  },
+  "bugs": {
+    "url": "https://github.com/tonyAmadeus/dsh-proxy-switch/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "index.js",
+    "client.js",
+    "router.mjs",
+    "cordis.patch.yml",
+    "icon.svg",
+    "README.md",
+    "LICENSE"
+  ],
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "~4.0.5"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true,
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-conversation",
+        "@deepseek-ai/dsh-client-locale",
+        "@deepseek-ai/dsh-client-connection"
+      ]
+    }
+  }
+}
