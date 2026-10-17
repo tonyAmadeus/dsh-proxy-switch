@@ -46,14 +46,12 @@ DSH 的代理策略是**启动器在插件加载之前**从 `.env` 一次性安�
 用 commit 锁定（推荐，最稳）：
 
 ```powershell
-dsh plugin add "git+https://github.com/tonyAmadeus/dsh-proxy-switch.git#36c96875200c67d9ff243f9cea831e4ccad79d31"
-```
-
-或用 tag（tag 可以被移动，不如 commit 稳；当前 `v0.1.0` 指向同一代码）：
-
-```powershell
+# 推荐：锁定 v0.1.0 tag
 dsh plugin add "git+https://github.com/tonyAmadeus/dsh-proxy-switch.git#v0.1.0"
 ```
+
+想要更严格，可以改成锁定具体 commit（把 `#` 后面换成仓库首页显示的 commit hash）。
+tag 相对方便，commit 则完全不可变。
 
 > npm 包尚未发布；发布后会支持 `dsh plugin add dsh-proxy-switch@<version>`。
 
