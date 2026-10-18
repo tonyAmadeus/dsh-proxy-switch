@@ -87,24 +87,47 @@ window.__ModuleLoader__.load({
           label: { fontSize: 12, fontWeight: 600, color: 'var(--dsw-alias-label-primary, #eee)' },
           hint: { fontSize: 11, lineHeight: 1.6, color: 'var(--dsw-alias-label-tertiary)' },
           row: { display: 'flex', flexWrap: 'wrap', gap: 8 },
-          modeButton: {
-            border: '1px solid var(--dsw-alias-border-primary, #686b73)',
+          group: {
+            display: 'flex',
+            gap: 4,
+            padding: 4,
+            borderRadius: 10,
+            background: 'var(--dsw-alias-background-secondary, #26272c)',
+            maxWidth: 560,
+          },
+          tab: (active, busy) => ({
+            flex: '1 1 0',
+            minWidth: 0,
+            border: 0,
             borderRadius: 8,
-            background: 'transparent',
+            padding: '8px 10px',
+            background: active ? 'var(--dsw-alias-background-primary, #303136)' : 'transparent',
             color: 'inherit',
             font: 'inherit',
+            fontSize: 13,
+            fontWeight: active ? 600 : 400,
             cursor: 'pointer',
-            padding: '8px 16px',
-            textAlign: 'left',
-            minWidth: 170,
-          },
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 8,
+            boxShadow: active ? '0 1px 3px #0004' : 'none',
+            opacity: busy ? 0.6 : 1,
+          }),
+          radio: (active) => ({
+            width: 8,
+            height: 8,
+            borderRadius: 999,
+            flex: '0 0 auto',
+            background: active ? 'var(--dsw-alias-accent-primary, #4b9cd3)' : 'var(--dsw-alias-label-tertiary, #999)',
+          }),
           pill: {
             display: 'inline-flex',
             alignItems: 'center',
             gap: 6,
             padding: '3px 10px',
             borderRadius: 999,
-            border: '1px solid var(--dsw-alias-border-primary, #686b73)',
+            background: 'var(--dsw-alias-background-secondary, #26272c)',
             fontSize: 11,
             color: 'var(--dsw-alias-label-secondary)',
           },
@@ -144,27 +167,28 @@ window.__ModuleLoader__.load({
           const mode = props.mode;
           const onPick = props.onPick;
           const busy = props.busy;
-          const item = (value, label, hint) => h('button',
+          const hints = { auto: tr('autoHint'), direct: tr('directHint'), clash: tr('clashHint') };
+          const tab = (value, label) => h('button',
             {
               type: 'button',
               key: value,
               disabled: busy,
               onClick: () => onPick(value),
-              title: hint,
-              style: {
-                ...styles.modeButton,
-                fontWeight: mode === value ? 600 : 400,
-                borderColor: mode === value ? 'var(--dsw-alias-border-accent, #4b9cd3)' : 'var(--dsw-alias-border-primary, #686b73)',
-                background: mode === value ? 'var(--dsw-alias-background-primary, #2a2b2f)' : 'transparent',
-                opacity: busy ? 0.6 : 1,
-              },
+              title: hints[value],
+              style: styles.tab(mode === value, busy),
             },
-            `${mode === value ? '● ' : '○ '}${label}`,
-            h('span', { style: { ...styles.hint, display: 'block', marginTop: 3 } }, hint));
-          return h('div', { style: styles.row },
-            item('auto', tr('auto'), tr('autoHint')),
-            item('direct', tr('direct'), tr('directHint')),
-            item('clash', tr('clash'), tr('clashHint')));
+            h('span', { style: styles.radio(mode === value) }),
+            label);
+          return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 8 } },
+            h('div', {
+              style: styles.group,
+              role: 'radiogroup',
+              'aria-label': tr('modeLabel'),
+            },
+              tab('auto', tr('auto')),
+              tab('direct', tr('direct')),
+              tab('clash', tr('clash'))),
+            h('span', { style: styles.hint }, hints[mode] || ''));
         }
 
         function StatusRow(props) {
@@ -324,7 +348,7 @@ window.__ModuleLoader__.load({
           if (!ui.ready || !ui.dock) return null;
 
           const button = {
-            border: '1px solid var(--dsw-alias-border-primary, #686b73)',
+            border: 0,
             borderRadius: 6,
             background: 'transparent',
             color: 'inherit',
@@ -341,19 +365,33 @@ window.__ModuleLoader__.load({
               onClick: () => pickMode(value),
               title: hint,
               style: {
-                ...button,
-                display: 'block',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
                 width: '100%',
-                textAlign: 'left',
-                marginTop: 6,
-                padding: '6px 10px',
-                fontWeight: mode === value ? 600 : 400,
+                marginTop: 2,
+                padding: '7px 9px',
+                border: 0,
+                borderRadius: 8,
                 background: mode === value ? 'var(--dsw-alias-background-secondary, #2a2b2f)' : 'transparent',
+                color: 'inherit',
+                font: 'inherit',
+                fontSize: 12,
+                textAlign: 'left',
+                cursor: 'pointer',
                 opacity: busy ? 0.6 : 1,
               },
             },
-            `${mode === value ? '● ' : '○ '}${text}`,
-            h('span', { style: { display: 'block', fontSize: 10, color: 'var(--dsw-alias-label-tertiary)', marginTop: 2 } }, hint));
+            h('span', {
+              style: {
+                width: 8,
+                height: 8,
+                borderRadius: 999,
+                flex: '0 0 auto',
+                background: mode === value ? 'var(--dsw-alias-accent-primary, #4b9cd3)' : 'var(--dsw-alias-label-tertiary, #999)',
+              },
+            }),
+            text);
 
           return h('span', {
             'data-proxy-switch': 'entry',
