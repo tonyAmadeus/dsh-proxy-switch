@@ -53,7 +53,7 @@ dsh plugin add dsh-proxy-switch@0.1.0
 也可以直接锁定 git tag（不依赖 npm）：
 
 ```powershell
-dsh plugin add "git+https://github.com/tonyAmadeus/dsh-proxy-switch.git#v0.1.0"
+dsh plugin add "git+https://github.com/tonyAmadeus/dsh-proxy-switch.git#v0.2.0"
 ```
 
 想要更严格，可以把 `#` 后面换成仓库首页显示的 commit hash，commit 完全不可变。
@@ -76,7 +76,7 @@ https_proxy=http://127.0.0.1:17897
 
 ## 使用
 
-对话输入框旁会多一个 **🌐** 按钮：
+打开 **设置**，左侧导航里会多出一节 **代理**（英文界面为 **Proxy**）：
 
 | 模式 | 行为 | 何时用 |
 |---|---|---|
@@ -85,7 +85,7 @@ https_proxy=http://127.0.0.1:17897
 | **走 Clash** | 一律走 Clash，不自动回退 | 必须确保走节点 |
 
 切换即时生效——路由器在每条连接上重读模式文件，不需要重启 DSH。
-面板底部会显示 `Clash 在线/未运行`、`路由器在线/离线`。
+状态行会显示 `Clash 在线/未运行`、`路由器在线/离线` 与当前模式文件路径。
 
 ---
 
@@ -131,7 +131,7 @@ Set-Content -NoNewline "$env:USERPROFILE\.dsh\proxy-mode.txt" direct
 - **DSH 启动头一两秒有报错**：正常。插件拉起路由器需要约 1–2 秒，之后自愈。
 - **日志出现 `owner process ... gone, exiting`**：上一轮 DSH 退出后路由器按约定自我清理，属正常。
 - **一直连不上**：先确认 `.env` 里那两行在；再确认模式不是「走 Clash」而 Clash 没开。
-- **模式面板打不开**：说明插件没加载成功，看 DSH 插件页的错误信息与上面的日志。
+- **设置里看不到「代理」这一节**：说明插件没加载成功，看 DSH 插件页的错误信息与上面的日志。
 
 ### 卸载
 
