@@ -1,33 +1,30 @@
-// dsh-proxy-switch — host side
+// @local/dsh-proxy-switch — host side
 //
-// DSH installs its outbound proxy policy once, from `.env`, before any plugin
-// loads; a plugin cannot change that decision. So the switch works like this:
+// Keeps a local proxy router alive and exposes a small RPC surface so the web
+// client can flip between auto / direct / clash without restarting DSH.
 //
-//   .env ──▶ 127.0.0.1:17897 (this plugin's local router)
-//                                     │
-//                                     ├─ auto   : Clash reachable ? Clash : direct
-//                                     ├─ direct : direct
-//                                     └─ clash  : Clash, no fallback
+// The router reads the mode file on every connection, so switching is instant.
 //
-// The router re-reads the mode file on every connection, so changing the mode
-// takes effect immediately — no DSH restart.
-//
-// This module keeps the router alive and exposes /proxy-switch RPC used by the
-// web client's switch.
+// Resilience notes (learned the hard way):
+// - The plugin fiber can be disposed right after apply() during some boot
+//   phases. Killing the child there would leave DSH without its outbound
+//   proxy, so the router supervises itself instead: it watches the host pid
+//   and exits when that process is gone.
+// - If the port is already open, an existing router is adopted rather than
+//   duplicated (a duplicate would die on EADDRINUSE anyway).
 
 import { spawn } from 'node:child_process';
 import fs from 'node:fs';
 import net from 'node:net';
+import { fileURLToPath } from 'node:url';
 import os from 'node:os';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 
 export const name = 'dsh-proxy-switch';
 export const inject = ['connection', 'webServer'];
 
 const ROUTER_SCRIPT = fileURLToPath(new URL('./router.mjs', import.meta.url));
 const DSH_HOME = process.env.DSH_HOME || path.join(os.homedir(), '.dsh');
-const MODES = ['auto', 'direct', 'clash'];
 
 export function apply(ctx, config = {}) {
   const options = {
@@ -36,27 +33,21 @@ export function apply(ctx, config = {}) {
     modeFile: String(config.modeFile ?? path.join(DSH_HOME, 'proxy-mode.txt')),
     logFile: String(config.logFile ?? path.join(DSH_HOME, 'dsh-proxy-switch.log')),
     parentFile: String(config.parentFile ?? path.join(DSH_HOME, 'proxy-router-parent.txt')),
+    uiFile: String(config.uiFile ?? path.join(DSH_HOME, 'proxy-ui.json')),
   };
 
   const log = (line) => {
     try {
       fs.appendFileSync(options.logFile, `${new Date().toISOString()} [plugin:${process.pid}] ${line}\n`);
-    } catch { /* logging must never break the plugin */ }
+    } catch { /* ignore */ }
   };
 
   log(`apply() entered (dshHome=${DSH_HOME})`);
 
-  // Seed the mode file so the router has a defined behaviour from the start.
-  try {
-    fs.mkdirSync(path.dirname(options.modeFile), { recursive: true });
-    if (!fs.existsSync(options.modeFile)) fs.writeFileSync(options.modeFile, 'auto\n', 'utf8');
-  } catch (error) {
-    log(`could not seed mode file: ${error.message}`);
-  }
-
-  // A router started by an external launcher (before DSH exists) has no parent
-  // pid; it watches this file instead and exits when this process disappears.
-  // Delayed so a short-lived boot worker does not claim ownership.
+  // Publish this process as the router's owner. A router started by an
+  // external launcher (before DSH exists) has no parent pid; it watches this
+  // file instead and exits when this process disappears. Delayed so a
+  // short-lived boot worker does not claim ownership of the router.
   const publishOwner = () => {
     try {
       fs.writeFileSync(options.parentFile, String(process.pid), 'utf8');
@@ -64,6 +55,33 @@ export function apply(ctx, config = {}) {
   };
   setTimeout(publishOwner, 3000).unref?.();
   setInterval(publishOwner, 30000).unref?.();
+
+  try {
+    fs.mkdirSync(options.modeFile.replace(/[\\/][^\\/]+$/, ''), { recursive: true });
+    if (!fs.existsSync(options.modeFile)) fs.writeFileSync(options.modeFile, 'auto\n', 'utf8');
+    if (!fs.existsSync(options.uiFile)) fs.writeFileSync(options.uiFile, JSON.stringify({ dock: true }, null, 2), 'utf8');
+  } catch (error) {
+    log(`could not seed state files: ${error.message}`);
+  }
+
+  const readUi = () => {
+    try {
+      const parsed = JSON.parse(fs.readFileSync(options.uiFile, 'utf8'));
+      return { dock: parsed?.dock !== false };
+    } catch {
+      return { dock: true };
+    }
+  };
+
+  const writeUi = (patch) => {
+    const next = { ...readUi(), ...patch };
+    try {
+      fs.writeFileSync(options.uiFile, JSON.stringify(next, null, 2), 'utf8');
+    } catch (error) {
+      log(`could not write ui state: ${error.message}`);
+    }
+    return next;
+  };
 
   let child;
   let stopped = false;
@@ -119,7 +137,7 @@ export function apply(ctx, config = {}) {
   const readMode = () => {
     try {
       const raw = fs.readFileSync(options.modeFile, 'utf8').trim().toLowerCase();
-      return MODES.includes(raw) ? raw : 'auto';
+      return ['auto', 'direct', 'clash'].includes(raw) ? raw : 'auto';
     } catch {
       return 'auto';
     }
@@ -127,11 +145,13 @@ export function apply(ctx, config = {}) {
 
   const status = async () => ({
     mode: readMode(),
+    dock: readUi().dock,
     routerPort: options.routerPort,
     clashPort: options.clashPort,
     routerUp: await probe(options.routerPort),
     clashUp: await probe(options.clashPort),
     modeFile: options.modeFile,
+    uiFile: options.uiFile,
   });
 
   // Start (or adopt) the router without tying its lifetime to this fiber:
@@ -169,11 +189,18 @@ export function apply(ctx, config = {}) {
         if (endpoint === 'status') return { ok: true, value: await status() };
         if (endpoint === 'setMode') {
           const mode = String(payload?.mode ?? '').toLowerCase();
-          if (!MODES.includes(mode)) {
+          if (!['auto', 'direct', 'clash'].includes(mode)) {
             return { ok: false, error: { code: 'invalid-mode', message: '模式必须是 auto / direct / clash' } };
           }
           fs.writeFileSync(options.modeFile, `${mode}\n`, 'utf8');
           await new Promise((resolve) => setTimeout(resolve, 120));
+          return { ok: true, value: await status() };
+        }
+        if (endpoint === 'setDock') {
+          if (typeof payload?.dock !== 'boolean') {
+            return { ok: false, error: { code: 'invalid-dock', message: 'dock 必须是布尔值' } };
+          }
+          writeUi({ dock: payload.dock });
           return { ok: true, value: await status() };
         }
         return { ok: false, error: { code: 'unknown-operation', message: `未知操作：${endpoint}` } };

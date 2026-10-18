@@ -1,6 +1,6 @@
 {
   "name": "dsh-proxy-switch",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "DSH 出站代理开关：本地路由器按模式在 Clash 与直连之间自动选路，界面一键切换，无需重启。Outbound proxy switch for DeepSeek Harness: local router picks Clash or direct per mode, with an in-UI switch.",
   "icon": "./icon.svg",
   "license": "MIT",
